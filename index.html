@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Feed RUD!3 (by helloguys)</title>
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    font-family: sans-serif;
+    color: white;
+  }
+
+  #score {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+    z-index: 10;
+  }
+
+  #box {
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    background: orange;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 8px;
+    user-select: none;
+    touch-action: none;
+  }
+
+  #creature {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="score">Score: 0</div>
+
+<img id="creature" src="https://cdn.imgtree.co/images/n3Ve6vny.jpg" />
+<div id="box">Early Access</div>
+
+<script>
+let score = 0;
+
+const scoreEl = document.getElementById("score");
+const creature = document.getElementById("creature");
+const box = document.getElementById("box");
+
+let cw = window.innerWidth;
+let ch = window.innerHeight;
+
+// creature state (center-based)
+let cx = cw / 2;
+let cy = ch / 2;
+let vx = 0;
+let vy = 0;
+
+// box state
+let bx = 100;
+let by = 100;
+let dragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+// apply positions
+function placeCreature() {
+  creature.style.left = cx + "px";
+  creature.style.top = cy + "px";
+}
+
+function placeBox() {
+  box.style.left = bx + "px";
+  box.style.top = by + "px";
+}
+
+placeCreature();
+placeBox();
+
+// slow wandering creature movement
+setInterval(() => {
+  vx += (Math.random() - 0.5) * 0.4;
+  vy += (Math.random() - 0.5) * 0.4;
+
+  vx = Math.max(-1.2, Math.min(1.2, vx));
+  vy = Math.max(-1.2, Math.min(1.2, vy));
+
+  cx += vx;
+  cy += vy;
+
+  cx = Math.max(0, Math.min(cw, cx));
+  cy = Math.max(0, Math.min(ch, cy));
+
+  placeCreature();
+}, 16);
+
+// POINTER-BASED DRAG (mouse + touch)
+box.addEventListener("pointerdown", (e) => {
+  dragging = true;
+  box.setPointerCapture(e.pointerId);
+
+  offsetX = e.clientX - bx;
+  offsetY = e.clientY - by;
+});
+
+box.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+
+  bx = e.clientX - offsetX;
+  by = e.clientY - offsetY;
+
+  placeBox();
+});
+
+box.addEventListener("pointerup", () => {
+  dragging = false;
+
+  const rect1 = box.getBoundingClientRect();
+  const rect2 = creature.getBoundingClientRect();
+
+  const hit =
+    rect1.left < rect2.right &&
+    rect1.right > rect2.left &&
+    rect1.top < rect2.bottom &&
+    rect1.bottom > rect2.top;
+
+  if (hit) {
+    score++;
+    scoreEl.textContent = "Score: " + score;
+
+    // respawn box
+    bx = Math.random() * (cw - 120);
+    by = Math.random() * (ch - 60);
+    placeBox();
+  }
+});
+
+// resize support
+window.addEventListener("resize", () => {
+  cw = window.innerWidth;
+  ch = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
